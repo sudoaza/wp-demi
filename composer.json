@@ -1,0 +1,5 @@
+{
+  "require": {
+    "hieu-le/wordpress-xmlrpc-client":"~2.4"
+  }
+}
