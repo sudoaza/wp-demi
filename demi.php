@@ -29,7 +29,7 @@ foreach ( $users as $user ) {
     try {
       $a = $wpClient->getProfile();
 
-      echo "El password es '$pass'\n";
+      echo "El password de '$user' es '$pass'\n";
 
     } catch ( Exception $e ) {
       if ( is_not_login_error($e) ) {
